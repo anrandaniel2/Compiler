@@ -33,12 +33,16 @@ jobs:
       run: |
         rm -rf external/dobby
         git clone --depth 1 https://github.com/jmpews/Dobby external/dobby
-        cd external/dobby
-        # Fix ARM64 assembly for Linux/Android NDK
-        # Must replace @PAGEOFF BEFORE @PAGE to avoid partial match
-        find . -name "*.asm" -path "*/arm64/*" -exec sed -i -E "s/([a-zA-Z_][a-zA-Z0-9_]*)@PAGEOFF/:lo12:\1/g" {} +
-        find . -name "*.asm" -path "*/arm64/*" -exec sed -i "s/@PAGE//g" {} +
-        echo "Patched Dobby ASM files for ELF/Android"
+        # Delete the broken .asm files and remove them from CMakeLists
+        rm -f external/dobby/source/TrampolineBridge/ClosureTrampolineBridge/arm64/closure_bridge_arm64.asm
+        rm -f external/dobby/source/TrampolineBridge/ClosureTrampolineBridge/arm64/closure_trampoline_arm64.asm
+        rm -f external/dobby/source/TrampolineBridge/ClosureTrampolineBridge/x64/closure_bridge_x64.asm
+        rm -f external/dobby/source/TrampolineBridge/ClosureTrampolineBridge/x64/closure_trampoline_x64.asm
+        # Remove .asm references and BUILD_WITH_TRAMPOLINE_ASM from Dobby CMakeLists
+        sed -i "/\.asm/d" external/dobby/CMakeLists.txt
+        sed -i "/BUILD_WITH_TRAMPOLINE_ASM/d" external/dobby/CMakeLists.txt
+        sed -i "/enable_language(ASM)/d" external/dobby/CMakeLists.txt
+        echo "Patched Dobby: removed broken ASM files"
 
     - name: Configure CMake
       env:
