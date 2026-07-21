@@ -29,20 +29,8 @@ jobs:
         rm -rf src/imgui
         git clone --depth 1 https://github.com/ocornut/imgui -b docking src/imgui
 
-    - name: Clone and patch Dobby
-      run: |
-        rm -rf external/dobby
-        git clone --depth 1 https://github.com/jmpews/Dobby external/dobby
-        # Delete the broken .asm files and remove them from CMakeLists
-        rm -f external/dobby/source/TrampolineBridge/ClosureTrampolineBridge/arm64/closure_bridge_arm64.asm
-        rm -f external/dobby/source/TrampolineBridge/ClosureTrampolineBridge/arm64/closure_trampoline_arm64.asm
-        rm -f external/dobby/source/TrampolineBridge/ClosureTrampolineBridge/x64/closure_bridge_x64.asm
-        rm -f external/dobby/source/TrampolineBridge/ClosureTrampolineBridge/x64/closure_trampoline_x64.asm
-        # Remove .asm references and BUILD_WITH_TRAMPOLINE_ASM from Dobby CMakeLists
-        sed -i "/\.asm/d" external/dobby/CMakeLists.txt
-        sed -i "/BUILD_WITH_TRAMPOLINE_ASM/d" external/dobby/CMakeLists.txt
-        sed -i "/enable_language(ASM)/d" external/dobby/CMakeLists.txt
-        echo "Patched Dobby: removed broken ASM files"
+    - name: Skip Dobby (use built-in stub)
+      run: echo "Using DobbyStub - Dobby master is broken with modern NDK"
 
     - name: Configure CMake
       env:
@@ -53,6 +41,7 @@ jobs:
         -DANDROID_ABI=arm64-v8a
         -DANDROID_PLATFORM=android-26
         -DCMAKE_BUILD_TYPE=Release
+        -DUSE_DOBBY_STUB=ON
 
     - name: Build
       run: cmake --build build -j4
