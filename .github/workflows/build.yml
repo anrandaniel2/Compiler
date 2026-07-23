@@ -14,15 +14,20 @@ jobs:
     - name: Extract source bundle
       run: python3 extract.py
 
-    - name: Install Ninja and NDK
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Install NDK and Ninja
       run: |
-        sudo apt-get install -y ninja-build
-        ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager "ndk;28.0.12674087"
+        sudo apt-get update && sudo apt-get install -y ninja-build
+        yes | sdkmanager --install "ndk;28.0.12674087" --sdk_root=${ANDROID_SDK_ROOT}
+        ls ${ANDROID_SDK_ROOT}/ndk/
 
     - name: Configure CMake
       run: |
+        export NDK=${ANDROID_SDK_ROOT}/ndk/28.0.12674087
         cmake -S . -B build-arm64 -G Ninja \
-          -DCMAKE_TOOLCHAIN_FILE=${ANDROID_HOME}/ndk/28.0.12674087/build/cmake/android.toolchain.cmake \
+          -DCMAKE_TOOLCHAIN_FILE=${NDK}/build/cmake/android.toolchain.cmake \
           -DANDROID_ABI=arm64-v8a \
           -DANDROID_PLATFORM=android-28 \
           -DANDROID_STL=c++_shared \
